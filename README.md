@@ -5,6 +5,7 @@ It was created as a replacement for current `Blender <http://www.blender.org/>`_
 OpenCOLLADA/C++ export/import, which is buggy and suffers from external dependencies.
 
 
+![BlenderCollada Export](https://github.com/user-attachments/assets/e1b39452-d4c2-4f88-8ffb-4197b79ba4b0)
 
 
 COLLADA 1.4.1 features (import)
