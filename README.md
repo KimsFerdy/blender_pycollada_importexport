@@ -4,6 +4,9 @@ This IO addon is based on `pycollada <http://pycollada.github.com/>`_ library.
 It was created as a replacement for current `Blender <http://www.blender.org/>`_ 2.5,
 OpenCOLLADA/C++ export/import, which is buggy and suffers from external dependencies.
 
+
+
+
 COLLADA 1.4.1 features (import)
 -----------------------------------------
 * Geometry
