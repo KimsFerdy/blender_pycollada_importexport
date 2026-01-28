@@ -721,7 +721,7 @@ class ColladaExport :
                 value = get_input("Metallic")
                 metallic = True
                 if value == None or value == 0 :
-                    value = get_input("Specular")
+                    value = get_input("Specular IOR Level")
                     metallic = False
                 #end if
                 if value != None and value != 0 :
@@ -738,7 +738,7 @@ class ColladaExport :
                     effect_kwargs["transparency"] = value
                       # overridden by Transmission (below) if any
                 #end if
-                value = get_input("Transmission")
+                value = get_input("Transmission Weight")
                 if value != None and value != 0 :
                     effect_kwargs["transparency"] = value
                     effect_kwargs["transparent"] = effect_kwargs["diffuse"]

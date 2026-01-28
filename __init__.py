@@ -65,7 +65,6 @@ import site
 
 site.addsitedir(modules_path)
 
-# ===== MODULE RELOAD (Blender 2.8+ style) =====
 if "import_collada" in locals():
     importlib.reload(import_collada)
 if "export_collada" in locals():
