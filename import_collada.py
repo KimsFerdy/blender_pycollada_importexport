@@ -371,7 +371,6 @@ class ColladaImport :
                 b_light.shadow_soft_size = 10000 # the larger, the softer the terminators
                 b_light.use_shadow = False
                 b_light.use_nodes = True # note: Cycles-only
-                b_light.cycles.cast_shadow = False
                 b_shader, node_graph = find_main_shader(b_light, "EMISSION")
                 node_x, node_y = b_shader.location
                 falloff = node_graph.nodes.new("ShaderNodeLightFalloff")
