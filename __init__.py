@@ -21,6 +21,7 @@ bl_info = {
     "blender": (5, 0, 0),
     "location": "File > Import, File > Export",
     "description": "Import/Export COLLADA",
+    "pip_dependencies": ["pycollada"],  # Declared for PDV auto-detection
     "category": "Import-Export",
 }
 
@@ -222,98 +223,6 @@ class EXPORT_OT_collada(bpy.types.Operator, ExportHelper):
         return export_collada.save(self, context, **kwargs)
 
 
-class BCry_OT_install_pycollada(bpy.types.Operator):
-    """Install pycollada into Blender's user scripts/modules folder"""
-
-    bl_idname = "bcry.install_pycollada"
-    bl_label = "Install pycollada"
-    bl_options = {"INTERNAL"}
-
-    def get_user_modules_path(self):
-        """Reliably get user-writable modules path (avoids protected Program Files)"""
-        # Method 1: Use resource_path('USER') - most reliable for user data
-        user_path = bpy.utils.resource_path("USER")
-        modules_path = os.path.join(user_path, "scripts", "modules")
-
-        # Method 2: Fallback to script_paths() but prefer user paths (last in list on Windows)
-        if not os.path.exists(modules_path):
-            script_paths = bpy.utils.script_paths("modules")
-            # Search reversed list - user paths typically appear last on Windows
-            for path in reversed(script_paths):
-                if (
-                    "AppData\\Roaming" in path
-                    or "Library/Application Support" in path
-                    or ".config" in path
-                ):
-                    modules_path = path
-                    break
-
-        os.makedirs(modules_path, exist_ok=True)
-        return modules_path
-
-    def execute(self, context):
-        py_path = sys.executable
-        modules_path = self.get_user_modules_path()
-
-        try:
-            # CRITICAL: Each argument must be a separate string WITHOUT trailing spaces
-            cmd = [
-                py_path,
-                "-m",
-                "pip",
-                "install",
-                "--upgrade",
-                "--target",
-                modules_path,
-                "pycollada",
-            ]
-
-            result = subprocess.run(cmd, capture_output=True, text=True, check=False)
-
-            if result.returncode == 0:
-                # Refresh sys.path immediately
-                if modules_path not in sys.path:
-                    sys.path.append(modules_path)
-                import site
-
-                site.addsitedir(modules_path)
-
-                # Validate installation actually worked
-                try:
-                    import importlib
-
-                    importlib.invalidate_caches()
-                    import collada
-
-                    version = getattr(collada, "__version__", "unknown")
-                    msg = f"pycollada {version} installed successfully!\nPath: {modules_path}\n\n⚠️ Restart Blender to fully activate the module."
-                    self.report({"INFO"}, msg)
-                except ImportError:
-                    self.report(
-                        {"WARNING"},
-                        f"Installation appeared successful but module not importable.\nPath: {modules_path}\n\n⚠️ Restart Blender to activate.",
-                    )
-            else:
-                error_msg = (
-                    result.stderr.strip() or result.stdout.strip() or "Unknown error"
-                )
-                # Show sanitized path for display (escape backslashes for console readability)
-                display_path = modules_path.replace("\\", "\\\\")
-                self.report(
-                    {"ERROR"},
-                    f"Install failed (code {result.returncode}):\n{error_msg}\n\n"
-                    f"Try manual install in PowerShell:\n"
-                    f'& "{py_path}" -m pip install --upgrade --target "{modules_path}" pycollada',
-                )
-
-        except Exception as e:
-            self.report(
-                {"ERROR"}, f"Exception during install: {str(e)}\nPath: {modules_path}"
-            )
-
-        return {"FINISHED"}
-
-
 class BCryAddonPreferences(bpy.types.AddonPreferences):
     bl_idname = __name__  # CRITICAL FIX: Must be __name__, not undefined 'name'
 
@@ -335,8 +244,11 @@ class BCryAddonPreferences(bpy.types.AddonPreferences):
             layout.label(text="Required for COLLADA import/export", icon="INFO")
 
             box = layout.box()
-            box.label(text="Quick Install:", icon="IMPORT")
-            box.operator("bcry.install_pycollada", text="Install pycollada")
+            box.label(text="Install via Pip Dependency Verifier:", icon="IMPORT")
+            row = box.row()
+            row.operator("pipdep.scan_addons", text="Scan Add-ons for Dependencies")
+            row = box.row()
+            row.operator("pipdep.install_all_missing", text="Install All Missing Dependencies")
 
             box = layout.box()
             box.label(text="Manual Install (if needed):", icon="CONSOLE")
@@ -356,7 +268,6 @@ class BCryAddonPreferences(bpy.types.AddonPreferences):
 classes = (
     IMPORT_OT_collada,
     EXPORT_OT_collada,
-    BCry_OT_install_pycollada,
     BCryAddonPreferences,
 )
 
